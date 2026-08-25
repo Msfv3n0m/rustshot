@@ -1,0 +1,14 @@
+[package]
+name = "rustshot"
+version = "0.1.0"
+edition = "2021"
+description = "Capture terminal command output as beautiful PNG images"
+
+[dependencies]
+clap = { version = "4", default-features = false, features = ["derive", "std", "help", "usage", "error-context"] }
+image = "0.25"
+imageproc = "0.25"
+ab_glyph = "0.2"
+portable-pty = "0.8"
+vt100 = "0.15"
+anyhow = "1"

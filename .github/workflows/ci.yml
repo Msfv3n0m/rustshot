@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Run clippy
+        run: cargo clippy -- -D warnings
+
+      - name: Test basic command (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo run --release -- -f /tmp/test_basic.png -- "echo hello world"
+          test -f /tmp/test_basic.png
+
+      - name: Test basic command (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cargo run --release -- -f test_basic.png -- "echo hello world"
+          if (!(Test-Path test_basic.png)) { exit 1 }
+
+      - name: Test multi-command (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo run --release -- -c -f /tmp/test_multi.png -- "echo first" "echo second"
+          test -f /tmp/test_multi.png
+
+      - name: Test multi-command (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cargo run --release -- -c -f test_multi.png -- "echo first" "echo second"
+          if (!(Test-Path test_multi.png)) { exit 1 }
+
+      - name: Test colored output (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo run --release -- -f /tmp/test_color.png -- "printf '\033[31mRED\033[0m \033[32mGREEN\033[0m'"
+          test -f /tmp/test_color.png
+
+      - name: Test no-decoration (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo run --release -- --no-decoration -f /tmp/test_nodecor.png -- "echo plain"
+          test -f /tmp/test_nodecor.png
+
+      - name: Test stdin pipe (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          echo "piped input" | cargo run --release -- -f /tmp/test_stdin.png
+          test -f /tmp/test_stdin.png
