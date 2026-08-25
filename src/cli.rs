@@ -2,9 +2,18 @@ use clap::Parser;
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "rustshot", version, about = "Capture terminal command output as beautiful PNG images")]
+#[command(
+    name = "rustshot",
+    version,
+    about = "Capture terminal command output as beautiful PNG images",
+    after_help = "EXAMPLES:\n  \
+        rustshot -- \"echo hello\"\n  \
+        rustshot -c -- \"git status\" \"git log --oneline -5\"\n  \
+        rustshot -c -f screenshot.png -- \"echo first\" \"echo second\" \"echo third\"\n  \
+        nmap -sV 10.0.0.1 | rustshot -f scan.png"
+)]
 pub struct Cli {
-    /// Commands to execute (pass after --)
+    /// Commands to execute; pass each as a quoted string after --
     #[arg(last = true)]
     pub commands: Vec<String>,
 

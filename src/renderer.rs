@@ -16,15 +16,11 @@ fn compute_layout(
     panels: &[ParsedOutput],
     show_cmd: bool,
     font_config: &FontConfig,
-    divider_height: u32,
 ) -> (Vec<PanelLayout>, u32) {
     let mut layouts = Vec::new();
     let mut y = 0u32;
 
-    for (i, panel) in panels.iter().enumerate() {
-        if i > 0 {
-            y += divider_height;
-        }
+    for panel in panels.iter() {
         let cmd_h = if show_cmd && !panel.command.is_empty() {
             font_config.cell_height as u32 + 8
         } else {
@@ -161,7 +157,7 @@ pub fn render(
     shadow: bool,
 ) -> RgbaImage {
     let (layouts, total_content_height) =
-        compute_layout(panels, show_cmd, font_config, theme.divider_height);
+        compute_layout(panels, show_cmd, font_config);
 
     let max_output_cols = panels.iter().map(|p| p.cols).max().unwrap_or(80);
     let max_header_cols = if show_cmd {
@@ -269,16 +265,6 @@ pub fn render(
     for (panel_idx, panel) in panels.iter().enumerate() {
         let layout = &layouts[panel_idx];
         let panel_y = content_y + layout.y_offset as i32;
-
-        // Divider between panels
-        if panel_idx > 0 {
-            let div_y = panel_y - theme.divider_height as i32;
-            draw_filled_rect_mut(
-                &mut img,
-                Rect::at(win_x, div_y).of_size(window_width, theme.divider_height),
-                theme.divider_color,
-            );
-        }
 
         let mut text_y = panel_y;
 

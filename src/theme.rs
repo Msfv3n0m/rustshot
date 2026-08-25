@@ -17,7 +17,9 @@ pub struct Theme {
     pub shadow_color: Rgba<u8>,
     pub shadow_offset: u32,
     pub default_fg: Rgba<u8>,
+    #[allow(dead_code)]
     pub divider_color: Rgba<u8>,
+    #[allow(dead_code)]
     pub divider_height: u32,
     pub cmd_header_color: Rgba<u8>,
 }
