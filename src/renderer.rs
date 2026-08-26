@@ -22,7 +22,7 @@ fn compute_layout(
 
     for panel in panels.iter() {
         let cmd_h = if show_cmd && !panel.command.is_empty() {
-            font_config.cell_height as u32 + 8
+            font_config.cell_height as u32
         } else {
             0
         };
@@ -48,7 +48,7 @@ fn draw_rounded_rect_filled(
     radius: u32,
     color: Rgba<u8>,
 ) {
-    if h < 2 * radius || w < 2 * radius {
+    if radius == 0 || h < 2 * radius || w < 2 * radius {
         draw_filled_rect_mut(img, Rect::at(x, y).of_size(w, h), color);
         return;
     }
@@ -182,7 +182,12 @@ pub fn render(
     let img_width = window_width + margin * 2 + shadow_extra;
     let img_height = window_height + margin * 2 + shadow_extra;
 
-    let mut img = RgbaImage::from_pixel(img_width, img_height, Rgba([0, 0, 0, 0]));
+    let outer_bg = if decoration {
+        Rgba([0, 0, 0, 0])
+    } else {
+        theme.outer_bg_color
+    };
+    let mut img = RgbaImage::from_pixel(img_width, img_height, outer_bg);
 
     let win_x = margin as i32;
     let win_y = margin as i32;
@@ -201,24 +206,29 @@ pub fn render(
         );
     }
 
-    // Window background
-    if decoration {
-        draw_rounded_rect_filled(
-            &mut img,
-            win_x,
-            win_y,
-            window_width,
-            window_height,
-            theme.corner_radius,
-            theme.bg_color,
-        );
-    } else {
+    let win_radius = if decoration { theme.corner_radius } else { 0 };
+
+    // Window border (no-decoration mode only)
+    if !decoration && theme.border_width > 0 {
+        let bw = theme.border_width;
         draw_filled_rect_mut(
             &mut img,
-            Rect::at(win_x, win_y).of_size(window_width, window_height),
-            theme.bg_color,
+            Rect::at(win_x - bw as i32, win_y - bw as i32)
+                .of_size(window_width + bw * 2, window_height + bw * 2),
+            theme.border_color,
         );
     }
+
+    // Window background
+    draw_rounded_rect_filled(
+        &mut img,
+        win_x,
+        win_y,
+        window_width,
+        window_height,
+        win_radius,
+        theme.bg_color,
+    );
 
     // Title bar
     if decoration {
@@ -270,15 +280,24 @@ pub fn render(
 
         // Command header
         if show_cmd && !panel.command.is_empty() {
-            let header = format!("$ {}", panel.command);
             draw_text_mut(
                 &mut img,
-                theme.cmd_header_color,
+                theme.cmd_arrow_color,
                 content_x,
                 text_y,
                 font_config.scale,
                 &font_config.font,
-                &header,
+                "\u{2192}",
+            );
+            let cmd_x = content_x + (2.0 * font_config.cell_width) as i32;
+            draw_text_mut(
+                &mut img,
+                theme.default_fg,
+                cmd_x,
+                text_y,
+                font_config.scale,
+                &font_config.font,
+                &panel.command,
             );
             text_y += layout.cmd_header_height as i32;
         }

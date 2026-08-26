@@ -8,8 +8,9 @@ use std::path::PathBuf;
     about = "Capture terminal command output as beautiful PNG images",
     after_help = "EXAMPLES:\n  \
         rustshot -- \"echo hello\"\n  \
-        rustshot -c -- \"git status\" \"git log --oneline -5\"\n  \
-        rustshot -c -f screenshot.png -- \"echo first\" \"echo second\" \"echo third\"\n  \
+        rustshot -- \"git status\" \"git log --oneline -5\"\n  \
+        rustshot -f screenshot.png -- \"echo first\" \"echo second\" \"echo third\"\n  \
+        rustshot --decoration --shadow -m 20 -- \"echo styled\"\n  \
         nmap -sV 10.0.0.1 | rustshot -f scan.png"
 )]
 pub struct Cli {
@@ -22,8 +23,12 @@ pub struct Cli {
     pub filename: PathBuf,
 
     /// Show the executed command above its output
-    #[arg(short = 'c', long)]
+    #[arg(short = 'c', long, default_value_t = true)]
     pub show_cmd: bool,
+
+    /// Hide the executed command above its output
+    #[arg(long)]
+    pub hide_cmd: bool,
 
     /// Terminal columns for PTY
     #[arg(short = 'C', long, default_value_t = 80)]
@@ -38,16 +43,16 @@ pub struct Cli {
     pub padding: u32,
 
     /// Margin outside window in pixels
-    #[arg(short, long, default_value_t = 20)]
+    #[arg(short, long, default_value_t = 0)]
     pub margin: u32,
 
-    /// Disable window chrome (title bar, rounded corners)
+    /// Enable window chrome (title bar, traffic lights)
     #[arg(long)]
-    pub no_decoration: bool,
+    pub decoration: bool,
 
-    /// Disable drop shadow
+    /// Enable drop shadow
     #[arg(long)]
-    pub no_shadow: bool,
+    pub shadow: bool,
 
     /// Force a specific font size (disables dynamic sizing)
     #[arg(long)]

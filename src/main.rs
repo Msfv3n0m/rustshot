@@ -44,16 +44,20 @@ fn main() -> Result<()> {
     let total_rows: usize = panels.iter().map(|p| p.rows).sum();
     let max_cols: usize = panels.iter().map(|p| p.cols).max().unwrap_or(80);
 
+    let decoration = cli.decoration;
+    let shadow = cli.shadow;
+    let show_cmd = cli.show_cmd && !cli.hide_cmd;
+
     let font_size = cli.font_size.unwrap_or_else(|| {
         compute_font_size(
             total_rows,
             max_cols,
             cli.padding,
             cli.margin,
-            if cli.no_decoration {
-                0
-            } else {
+            if decoration {
                 theme.title_bar_height
+            } else {
+                0
             },
             1200,
             1600,
@@ -64,13 +68,13 @@ fn main() -> Result<()> {
 
     let img = render(
         &panels,
-        cli.show_cmd,
+        show_cmd,
         &theme,
         &font_config,
         cli.padding,
         cli.margin,
-        !cli.no_decoration,
-        !cli.no_shadow,
+        decoration,
+        shadow,
     );
 
     img.save(&cli.filename)

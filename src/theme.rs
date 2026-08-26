@@ -21,7 +21,12 @@ pub struct Theme {
     pub divider_color: Rgba<u8>,
     #[allow(dead_code)]
     pub divider_height: u32,
+    #[allow(dead_code)]
     pub cmd_header_color: Rgba<u8>,
+    pub cmd_arrow_color: Rgba<u8>,
+    pub outer_bg_color: Rgba<u8>,
+    pub border_color: Rgba<u8>,
+    pub border_width: u32,
 }
 
 impl Default for Theme {
@@ -44,6 +49,10 @@ impl Default for Theme {
             divider_color: Rgba([60, 64, 72, 255]),
             divider_height: 2,
             cmd_header_color: Rgba([130, 137, 151, 255]),
+            cmd_arrow_color: Rgba([0, 204, 0, 255]),
+            outer_bg_color: Rgba([30, 30, 30, 255]),
+            border_color: Rgba([80, 84, 92, 255]),
+            border_width: 1,
         }
     }
 }
