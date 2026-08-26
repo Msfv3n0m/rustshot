@@ -42,24 +42,20 @@ jobs:
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Package (Linux)
+      - name: Rename binary (Linux)
         if: runner.os == 'Linux'
-        run: |
-          cd target/${{ matrix.target }}/release
-          tar czf ../../../rustshot-${{ env.RELEASE_TAG }}-x86_64-linux.tar.gz rustshot
+        run: cp target/${{ matrix.target }}/release/rustshot rustshot-x86_64-linux
 
-      - name: Package (Windows)
+      - name: Rename binary (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: |
-          cd target/${{ matrix.target }}/release
-          7z a ../../../rustshot-${{ env.RELEASE_TAG }}-x86_64-windows.zip rustshot.exe
+        run: cp target/${{ matrix.target }}/release/rustshot.exe rustshot-x86_64-windows.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.target }}
-          path: rustshot-*
+          path: rustshot-x86_64-*
 
   release:
     needs: build
@@ -85,8 +81,8 @@ jobs:
             Capture terminal command output as beautiful PNG images.
 
             ### Downloads
-            - **Linux (x86_64)**: `rustshot-${{ env.RELEASE_TAG }}-x86_64-linux.tar.gz`
-            - **Windows (x86_64)**: `rustshot-${{ env.RELEASE_TAG }}-x86_64-windows.zip`
+            - **Linux (x86_64)**: `rustshot-x86_64-linux`
+            - **Windows (x86_64)**: `rustshot-x86_64-windows.exe`
 
             ### Install from source
             ```
