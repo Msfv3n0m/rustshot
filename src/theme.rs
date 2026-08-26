@@ -21,7 +21,6 @@ pub struct Theme {
     pub divider_color: Rgba<u8>,
     #[allow(dead_code)]
     pub divider_height: u32,
-    #[allow(dead_code)]
     pub cmd_header_color: Rgba<u8>,
     pub cmd_arrow_color: Rgba<u8>,
     pub outer_bg_color: Rgba<u8>,
@@ -29,10 +28,39 @@ pub struct Theme {
     pub border_width: u32,
 }
 
+impl Theme {
+    pub fn scaled(&self, s: u32) -> Theme {
+        let si = s as i32;
+        Theme {
+            bg_color: self.bg_color,
+            title_bar_color: self.title_bar_color,
+            title_bar_height: self.title_bar_height * s,
+            button_radius: self.button_radius * si,
+            button_y_center: self.button_y_center * si,
+            button_x_start: self.button_x_start * si,
+            button_spacing: self.button_spacing * si,
+            close_color: self.close_color,
+            minimize_color: self.minimize_color,
+            maximize_color: self.maximize_color,
+            corner_radius: self.corner_radius * s,
+            shadow_color: self.shadow_color,
+            shadow_offset: self.shadow_offset * s,
+            default_fg: self.default_fg,
+            divider_color: self.divider_color,
+            divider_height: self.divider_height * s,
+            cmd_header_color: self.cmd_header_color,
+            cmd_arrow_color: self.cmd_arrow_color,
+            outer_bg_color: self.outer_bg_color,
+            border_color: self.border_color,
+            border_width: self.border_width * s,
+        }
+    }
+}
+
 impl Default for Theme {
     fn default() -> Self {
         Self {
-            bg_color: Rgba([40, 44, 52, 255]),
+            bg_color: Rgba([21, 21, 21, 255]),
             title_bar_color: Rgba([50, 54, 62, 255]),
             title_bar_height: 38,
             button_radius: 7,
@@ -45,11 +73,11 @@ impl Default for Theme {
             corner_radius: 10,
             shadow_color: Rgba([0, 0, 0, 80]),
             shadow_offset: 8,
-            default_fg: Rgba([171, 178, 191, 255]),
+            default_fg: Rgba([211, 211, 211, 255]),
             divider_color: Rgba([60, 64, 72, 255]),
             divider_height: 2,
-            cmd_header_color: Rgba([130, 137, 151, 255]),
-            cmd_arrow_color: Rgba([0, 204, 0, 255]),
+            cmd_header_color: Rgba([128, 128, 128, 255]),
+            cmd_arrow_color: Rgba([0, 255, 0, 255]),
             outer_bg_color: Rgba([30, 30, 30, 255]),
             border_color: Rgba([80, 84, 92, 255]),
             border_width: 1,

@@ -287,12 +287,12 @@ pub fn render(
                 text_y,
                 font_config.scale,
                 &font_config.font,
-                "\u{2192}",
+                "\u{279C}",
             );
             let cmd_x = content_x + (2.0 * font_config.cell_width) as i32;
             draw_text_mut(
                 &mut img,
-                theme.default_fg,
+                theme.cmd_header_color,
                 cmd_x,
                 text_y,
                 font_config.scale,

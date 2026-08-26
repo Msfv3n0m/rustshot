@@ -37,7 +37,9 @@ fn convert_color(color: vt100::Color) -> CellColor {
 }
 
 pub fn parse_ansi(result: &CommandResult, pty_cols: u16, pty_rows: u16) -> Result<ParsedOutput> {
-    let mut parser = vt100::Parser::new(pty_rows, pty_cols, 0);
+    let newline_count = result.raw_output.iter().filter(|&&b| b == b'\n').count();
+    let parser_rows = ((newline_count * 2 + pty_rows as usize).max(pty_rows as usize)).min(u16::MAX as usize) as u16;
+    let mut parser = vt100::Parser::new(parser_rows, pty_cols, 0);
     parser.process(&result.raw_output);
 
     let screen = parser.screen();

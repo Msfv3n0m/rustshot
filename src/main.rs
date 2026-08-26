@@ -48,31 +48,34 @@ fn main() -> Result<()> {
     let shadow = cli.shadow;
     let show_cmd = cli.show_cmd && !cli.hide_cmd;
 
+    let scale: u32 = 2;
+
     let font_size = cli.font_size.unwrap_or_else(|| {
         compute_font_size(
             total_rows,
             max_cols,
-            cli.padding,
-            cli.margin,
+            cli.padding * scale,
+            cli.margin * scale,
             if decoration {
-                theme.title_bar_height
+                theme.title_bar_height * scale
             } else {
                 0
             },
-            1200,
-            1600,
+            1200 * scale,
+            1600 * scale,
         )
-    });
+    }) * scale as f32;
 
     let font_config = load_fonts(font_size);
+    let scaled_theme = theme.scaled(scale);
 
     let img = render(
         &panels,
         show_cmd,
-        &theme,
+        &scaled_theme,
         &font_config,
-        cli.padding,
-        cli.margin,
+        cli.padding * scale,
+        cli.margin * scale,
         decoration,
         shadow,
     );

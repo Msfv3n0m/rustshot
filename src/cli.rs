@@ -35,7 +35,7 @@ pub struct Cli {
     pub columns: u16,
 
     /// Terminal rows for PTY
-    #[arg(long, default_value_t = 24)]
+    #[arg(long, default_value_t = 500)]
     pub rows: u16,
 
     /// Padding inside window frame in pixels
