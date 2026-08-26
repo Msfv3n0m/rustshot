@@ -4,12 +4,18 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.2.0)"
+        required: true
 
 permissions:
   contents: write
 
 env:
   CARGO_TERM_COLOR: always
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   build:
@@ -25,6 +31,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -38,14 +46,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cd target/${{ matrix.target }}/release
-          tar czf ../../../rustshot-${{ github.ref_name }}-x86_64-linux.tar.gz rustshot
+          tar czf ../../../rustshot-${{ env.RELEASE_TAG }}-x86_64-linux.tar.gz rustshot
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           cd target/${{ matrix.target }}/release
-          7z a ../../../rustshot-${{ github.ref_name }}-x86_64-windows.zip rustshot.exe
+          7z a ../../../rustshot-${{ env.RELEASE_TAG }}-x86_64-windows.zip rustshot.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -69,25 +77,26 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: false
           body: |
-            ## rustshot ${{ github.ref_name }}
+            ## rustshot ${{ env.RELEASE_TAG }}
 
             Capture terminal command output as beautiful PNG images.
 
             ### Downloads
-            - **Linux (x86_64)**: `rustshot-${{ github.ref_name }}-x86_64-linux.tar.gz`
-            - **Windows (x86_64)**: `rustshot-${{ github.ref_name }}-x86_64-windows.zip`
+            - **Linux (x86_64)**: `rustshot-${{ env.RELEASE_TAG }}-x86_64-linux.tar.gz`
+            - **Windows (x86_64)**: `rustshot-${{ env.RELEASE_TAG }}-x86_64-windows.zip`
 
             ### Install from source
             ```
-            cargo install --git https://github.com/Msfv3n0m/rustshot.git --tag ${{ github.ref_name }}
+            cargo install --git https://github.com/Msfv3n0m/rustshot.git --tag ${{ env.RELEASE_TAG }}
             ```
 
             ### Usage
             ```
             rustshot -- "echo hello world"
-            rustshot -c -f screenshot.png -- "git status" "git log --oneline -5"
+            rustshot -f screenshot.png -- "git status" "git log --oneline -5"
             command | rustshot -f output.png
             ```
           files: artifacts/*
