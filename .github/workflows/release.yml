@@ -24,6 +24,8 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
           - os: windows-latest
             target: x86_64-pc-windows-msvc
 
@@ -39,12 +41,20 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Install musl tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Rename binary (Linux)
-        if: runner.os == 'Linux'
+      - name: Rename binary (Linux gnu)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
         run: cp target/${{ matrix.target }}/release/rustshot rustshot-x86_64-linux
+
+      - name: Rename binary (Linux musl)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: cp target/${{ matrix.target }}/release/rustshot rustshot-x86_64-linux-static
 
       - name: Rename binary (Windows)
         if: runner.os == 'Windows'
@@ -82,6 +92,7 @@ jobs:
 
             ### Downloads
             - **Linux (x86_64)**: `rustshot-x86_64-linux`
+            - **Linux (x86_64, static)**: `rustshot-x86_64-linux-static`
             - **Windows (x86_64)**: `rustshot-x86_64-windows.exe`
 
             ### Install from source
