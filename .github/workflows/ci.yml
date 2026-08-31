@@ -70,7 +70,7 @@ jobs:
       - name: Test no-decoration (Linux)
         if: runner.os == 'Linux'
         run: |
-          cargo run --release -- --no-decoration -f /tmp/test_nodecor.png -- "echo plain"
+          cargo run --release -- -f /tmp/test_nodecor.png -- "echo plain"
           test -f /tmp/test_nodecor.png
 
       - name: Test stdin pipe (Linux)
