@@ -2,7 +2,14 @@
 name = "rustshot"
 version = "0.3.0"
 edition = "2021"
+rust-version = "1.70"
 description = "Capture terminal command output as beautiful PNG images"
+license = "MIT"
+repository = "https://github.com/Msfv3n0m/rustshot"
+homepage = "https://github.com/Msfv3n0m/rustshot"
+readme = "README.md"
+keywords = ["screenshot", "terminal", "cli", "png", "ansi"]
+categories = ["command-line-utilities", "multimedia::images"]
 
 [dependencies]
 clap = { version = "4", default-features = false, features = ["derive", "std", "help", "usage", "error-context"] }
