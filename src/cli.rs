@@ -57,4 +57,8 @@ pub struct Cli {
     /// Force a specific font size (disables dynamic sizing)
     #[arg(long)]
     pub font_size: Option<f32>,
+
+    /// ADB device serial (run commands on an Android device via adb)
+    #[arg(short = 'd', long)]
+    pub device: Option<String>,
 }

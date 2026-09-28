@@ -60,6 +60,47 @@ pub fn execute_command(cmd: &str, cols: u16, rows: u16) -> Result<CommandResult>
     })
 }
 
+pub fn execute_adb_command(cmd: &str, device: &str, cols: u16, rows: u16) -> Result<CommandResult> {
+    let pty_system = NativePtySystem::default();
+    let pair = pty_system
+        .openpty(PtySize {
+            rows,
+            cols,
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .context("Failed to open PTY")?;
+
+    let shell_cmd = format!("stty columns {} rows {} 2>/dev/null; {}", cols, rows, cmd);
+    let mut cmd_builder = CommandBuilder::new("adb");
+    cmd_builder.args(["-s", device, "shell", &shell_cmd]);
+
+    let mut child = pair
+        .slave
+        .spawn_command(cmd_builder)
+        .context("Failed to spawn adb command")?;
+
+    drop(pair.slave);
+
+    let mut reader = pair.master.try_clone_reader().context("Failed to clone PTY reader")?;
+
+    let reader_thread = std::thread::spawn(move || -> Vec<u8> {
+        let mut buf = Vec::new();
+        let _ = reader.read_to_end(&mut buf);
+        buf
+    });
+
+    let _ = child.wait();
+    drop(pair.master);
+
+    let raw_output = reader_thread.join().unwrap_or_default();
+
+    Ok(CommandResult {
+        command: cmd.to_string(),
+        raw_output,
+    })
+}
+
 pub fn read_stdin() -> Result<CommandResult> {
     let mut raw_output = Vec::new();
     std::io::stdin()

@@ -26,6 +26,14 @@ fn main() -> Result<()> {
             anyhow::bail!("No commands provided. Usage: rustshot -- \"command\" or pipe input via stdin.");
         }
         vec![executor::read_stdin()?]
+    } else if let Some(ref device) = cli.device {
+        cli.commands
+            .iter()
+            .map(|cmd| {
+                eprintln!("Executing on device {}: {}", device, cmd);
+                executor::execute_adb_command(cmd, device, cli.columns, cli.rows)
+            })
+            .collect::<Result<Vec<_>>>()?
     } else {
         cli.commands
             .iter()
