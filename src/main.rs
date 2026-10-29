@@ -17,17 +17,52 @@ use parser::parse_ansi;
 use renderer::render;
 use theme::Theme;
 
+fn rejoin_quoted_commands(args: Vec<String>) -> Vec<String> {
+    let mut result = Vec::new();
+    let mut accumulator = String::new();
+    let mut in_single_quote = false;
+
+    for arg in args {
+        if in_single_quote {
+            accumulator.push(' ');
+            if let Some(stripped) = arg.strip_suffix('\'') {
+                accumulator.push_str(stripped);
+                result.push(std::mem::take(&mut accumulator));
+                in_single_quote = false;
+            } else {
+                accumulator.push_str(&arg);
+            }
+        } else if let Some(rest) = arg.strip_prefix('\'') {
+            if let Some(inner) = rest.strip_suffix('\'') {
+                result.push(inner.to_string());
+            } else {
+                in_single_quote = true;
+                accumulator = rest.to_string();
+            }
+        } else {
+            result.push(arg);
+        }
+    }
+
+    if !accumulator.is_empty() {
+        result.push(accumulator);
+    }
+
+    result
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     let theme = Theme::default();
+    let commands = rejoin_quoted_commands(cli.commands);
 
-    let results: Vec<CommandResult> = if cli.commands.is_empty() {
+    let results: Vec<CommandResult> = if commands.is_empty() {
         if std::io::stdin().is_terminal() {
             anyhow::bail!("No commands provided. Usage: rustshot -- \"command\" or pipe input via stdin.");
         }
         vec![executor::read_stdin()?]
     } else if let Some(ref device) = cli.device {
-        cli.commands
+        commands
             .iter()
             .map(|cmd| {
                 eprintln!("Executing on device {}: {}", device, cmd);
@@ -35,7 +70,7 @@ fn main() -> Result<()> {
             })
             .collect::<Result<Vec<_>>>()?
     } else {
-        cli.commands
+        commands
             .iter()
             .map(|cmd| {
                 eprintln!("Executing: {}", cmd);
@@ -94,4 +129,64 @@ fn main() -> Result<()> {
     eprintln!("Saved to {:?}", cli.filename);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn single_quoted_command_is_rejoined() {
+        let args = vec!["'echo".into(), "hello".into(), "world'".into()];
+        assert_eq!(rejoin_quoted_commands(args), vec!["echo hello world"]);
+    }
+
+    #[test]
+    fn fully_single_quoted_single_arg() {
+        let args = vec!["'echo hello world'".into()];
+        assert_eq!(rejoin_quoted_commands(args), vec!["echo hello world"]);
+    }
+
+    #[test]
+    fn unquoted_commands_unchanged() {
+        let args = vec!["echo hello".into(), "git status".into()];
+        assert_eq!(
+            rejoin_quoted_commands(args),
+            vec!["echo hello", "git status"]
+        );
+    }
+
+    #[test]
+    fn mixed_quoted_and_unquoted() {
+        let args = vec![
+            "'git".into(),
+            "log".into(),
+            "--oneline'".into(),
+            "echo hi".into(),
+        ];
+        assert_eq!(
+            rejoin_quoted_commands(args),
+            vec!["git log --oneline", "echo hi"]
+        );
+    }
+
+    #[test]
+    fn unclosed_single_quote_still_collected() {
+        let args = vec!["'echo".into(), "hello".into()];
+        assert_eq!(rejoin_quoted_commands(args), vec!["echo hello"]);
+    }
+
+    #[test]
+    fn multiple_single_quoted_commands() {
+        let args = vec![
+            "'echo".into(),
+            "first'".into(),
+            "'echo".into(),
+            "second'".into(),
+        ];
+        assert_eq!(
+            rejoin_quoted_commands(args),
+            vec!["echo first", "echo second"]
+        );
+    }
 }
