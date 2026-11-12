@@ -56,10 +56,24 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            artifact: rustshot-x86_64-linux
+            use_cross: false
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
+            artifact: rustshot-x86_64-linux-static
+            use_cross: false
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-musleabihf
+            artifact: rustshot-armv7-linux-static
+            use_cross: true
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            artifact: rustshot-aarch64-linux-static
+            use_cross: true
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            artifact: rustshot-x86_64-windows.exe
+            use_cross: false
 
     runs-on: ${{ matrix.os }}
 
@@ -75,27 +89,32 @@ jobs:
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
-      - name: Build release binary
+      - name: Install cross
+        if: matrix.use_cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build release binary (native)
+        if: "!matrix.use_cross"
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Rename binary (Linux gnu)
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
-        run: cp target/${{ matrix.target }}/release/rustshot rustshot-x86_64-linux
+      - name: Build release binary (cross)
+        if: matrix.use_cross
+        run: cross build --release --target ${{ matrix.target }}
 
-      - name: Rename binary (Linux musl)
-        if: matrix.target == 'x86_64-unknown-linux-musl'
-        run: cp target/${{ matrix.target }}/release/rustshot rustshot-x86_64-linux-static
+      - name: Rename binary (Linux/cross)
+        if: runner.os == 'Linux'
+        run: cp target/${{ matrix.target }}/release/rustshot ${{ matrix.artifact }}
 
       - name: Rename binary (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: cp target/${{ matrix.target }}/release/rustshot.exe rustshot-x86_64-windows.exe
+        run: cp target/${{ matrix.target }}/release/rustshot.exe ${{ matrix.artifact }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.target }}
-          path: rustshot-x86_64-*
+          path: ${{ matrix.artifact }}
 
   release:
     needs: [resolve-tag, build]
@@ -129,6 +148,8 @@ jobs:
             ### Downloads
             - **Linux (x86_64)**: `rustshot-x86_64-linux`
             - **Linux (x86_64, static)**: `rustshot-x86_64-linux-static`
+            - **Linux (ARMv7, static)**: `rustshot-armv7-linux-static`
+            - **Linux (AArch64, static)**: `rustshot-aarch64-linux-static`
             - **Windows (x86_64)**: `rustshot-x86_64-windows.exe`
 
             ### Install from source
